@@ -88,7 +88,7 @@ func (r *CronJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// 列出所有活动的作业，并更新状态
 	var childJobs kbatchv1.JobList
-	if err := r.List(ctx, &childJobs, client.InNamespace(req.Namespace), client.MatchingFields{jobOwnerKey: req.Name}); err != nil {
+	if err := r.List(ctx, &childJobs, client.InNamespace(req.Namespace), client.MatchingField(jobOwnerKey, req.Name)); err != nil {
 		log.Error(err, "unable to list child Jobs")
 		return ctrl.Result{}, err
 	}
@@ -326,8 +326,6 @@ func (r *CronJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		// We want job names for a given nominal start time to have a deterministic name to avoid the same job being created twice
 		name := fmt.Sprintf("%s-%d", cronJob.Name, scheduledTime.Unix())
 
-		log.V(1).Info("zzz name", "job", name)
-
 		job := &kbatchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels:      make(map[string]string),
@@ -344,9 +342,6 @@ func (r *CronJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		for k, v := range cronJob.Spec.JobTemplate.Labels {
 			job.Labels[k] = v
 		}
-		log.V(1).Info("zzz CronJob", "job", cronJob)
-		log.V(1).Info("zzz job", "job", job)
-		log.V(1).Info("zzz scheme", "job", r.Scheme)
 
 		if err := ctrl.SetControllerReference(cronJob, job, r.Scheme); err != nil {
 			return nil, err

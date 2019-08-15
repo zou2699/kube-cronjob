@@ -69,15 +69,21 @@ func main() {
 	if err = (&controllers.CronJobReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("CronJob"),
+		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CronJob")
 		os.Exit(1)
 	}
+	// 没有配置证书，关闭
+	// if err = (&batchv1.CronJob{}).SetupWebhookWithManager(mgr); err != nil {
+	// 	setupLog.Error(err, "unable to create webhook", "webhook", "Captain")
+	// 	os.Exit(1)
+	// }
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
-		os.Exit(1)
+		// os.Exit(1)
 	}
 }
